@@ -39,7 +39,14 @@ if "sqlite" in DATABASE_URL and (os.getenv("STREAMLIT_SERVER_GATHER_USAGE_STATS"
 
 engine = create_engine(
     DATABASE_URL, 
-    connect_args={"check_same_thread": False} if "sqlite" in DATABASE_URL else {}
+    connect_args={"check_same_thread": False} if "sqlite" in DATABASE_URL else {
+        "sslmode": "require",
+        "connect_timeout": 10
+    },
+    pool_pre_ping=True,  # Automatically reconnect if connection is lost
+    pool_recycle=300,    # Recycle connections every 5 minutes
+    pool_size=5,         # Maintain a small pool for Streamlit
+    max_overflow=10
 )
 
 # Thread-safe session factory
