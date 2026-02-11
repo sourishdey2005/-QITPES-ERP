@@ -8,27 +8,34 @@ load_dotenv()
 
 import streamlit as st
 
-# --- Database Configuration ---
-# Priority 1: Environment Variable
-# Priority 2: Streamlit Secrets (for Cloud deployment)
-# Priority 3: Local SQLite (Desktop development)
+# --- Database Configuration Logic ---
+def get_database_url():
+    # Priority 1: Environment Variable
+    # Priority 2: Streamlit Secrets
+    # Priority 3: Local SQLite
+    
+    url = os.getenv("DATABASE_URL")
+    if url:
+        return url
+        
+    try:
+        if "DATABASE_URL" in st.secrets:
+            return st.secrets["DATABASE_URL"]
+    except:
+        pass
+        
+    # Default to SQLite
+    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    db_path = os.path.join(base_dir, "erp.db")
+    return f"sqlite:///{db_path}"
 
-# Check for DATABASE_URL in st.secrets if available (Streamlit Cloud best practice)
-try:
-    SECRET_URL = st.secrets.get("DATABASE_URL")
-except:
-    SECRET_URL = None
-
-# Ensure the database is always in the project root regardless of where the app is started
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-DB_PATH = os.path.join(BASE_DIR, "erp.db")
-
-DATABASE_URL = os.getenv("DATABASE_URL") or SECRET_URL or f"sqlite:///{DB_PATH}"
+DATABASE_URL = get_database_url()
+# Needed for UI indicators
+DB_PATH = DATABASE_URL.split("///")[-1] if "sqlite" in DATABASE_URL else "Remote Postgres"
 
 # Clear warning for Cloud users
 if "sqlite" in DATABASE_URL and (os.getenv("STREAMLIT_SERVER_GATHER_USAGE_STATS") or os.getenv("SHIBBOLETH_ENABLED")):
     print("⚠️ WARNING: Running with SQLite on an ephemeral cloud filesystem.")
-    print("Data will be LOST when the app sleeps or restarts. Use a remote database for production.")
 
 engine = create_engine(
     DATABASE_URL, 

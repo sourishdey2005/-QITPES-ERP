@@ -1,4 +1,12 @@
-import streamlit as st
+# --- Configuration ---
+# MUST be the first Streamlit command
+st.set_page_config(
+    page_title="QITPES ERP SYSTEM",
+    page_icon="🏢",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
+
 import pandas as pd
 from database.db_manager import init_db
 from database.models import UserRole
@@ -26,21 +34,16 @@ def log_event(action, details=""):
     """Helper to log global system activities"""
     from database.db_manager import SessionLocal
     from database.models import ActivityLog
-    db = SessionLocal()
-    user_id = st.session_state.get('user_id')
-    if user_id:
-        log = ActivityLog(user_id=user_id, action=action, details=details)
-        db.add(log)
-        db.commit()
-    db.close()
-
-# --- Configuration ---
-st.set_page_config(
-    page_title="QITPES ERP SYSTEM",
-    page_icon="🏢",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
+    try:
+        db = SessionLocal()
+        user_id = st.session_state.get('user_id')
+        if user_id:
+            log = ActivityLog(user_id=user_id, action=action, details=details)
+            db.add(log)
+            db.commit()
+        db.close()
+    except Exception as e:
+        print(f"Logging failed: {e}")
 
 # --- Load Styles ---
 st.markdown(load_css(), unsafe_allow_html=True)
