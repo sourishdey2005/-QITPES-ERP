@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+env/
+
+# Databases
+*.db
+*.sqlite3
+
+# Secrets (IMPORTANT - DO NOT REMOVE)
+.env
+.streamlit/secrets.toml
+
+# Streamlit config (optional)
+.streamlit/config.toml
+
+# OS
+.DS_Store
+Thumbs.db

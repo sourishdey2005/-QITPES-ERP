@@ -146,6 +146,20 @@ def dashboard():
         st.query_params["page"] = selection
         
         st.markdown("---")
+        
+        # Database Status Indicator
+        from database.db_manager import DB_PATH, DATABASE_URL
+        with st.expander("💾 System Storage", expanded=False):
+            st.caption(f"Location: `{DB_PATH}`")
+            if "sqlite" in DATABASE_URL:
+                if os.getenv("STREAMLIT_SERVER_GATHER_USAGE_STATS") or os.getenv("SHIBBOLETH_ENABLED"):
+                    st.error("⚠️ DATA IS TEMPORARY!")
+                    st.info("Cloud sleep will reset DB. Connect to Postgres for permanence.")
+                else:
+                    st.success("✅ Persistent Local Storage")
+            else:
+                st.success("✅ External Database Connected")
+
         if st.button("Logout"):
             log_event("Logout", "User logged out")
             st.query_params.clear()

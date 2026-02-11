@@ -1,13 +1,13 @@
-import sqlite3
 import os
+from sqlalchemy import text
+from database.db_manager import engine
+from dotenv import load_dotenv
 
-db_path = "erp.db"
+load_dotenv()
 
-if os.path.exists(db_path):
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    
+def run_migrations():
     # List of columns to add (Table, Column, Type, Default)
+    # Note: Using SQLAlchemy types/syntax that is generally compatible
     migrations = [
         ("users", "company_id", "INTEGER", "NULL"),
         ("users", "branch_id", "INTEGER", "NULL"),
@@ -22,18 +22,22 @@ if os.path.exists(db_path):
         ("finance_records", "branch_id", "INTEGER", "NULL")
     ]
     
-    for table, column, col_type, default in migrations:
-        try:
-            print(f"Adding {column} to {table}...")
-            cursor.execute(f"ALTER TABLE {table} ADD COLUMN {column} {col_type} DEFAULT {default}")
-        except sqlite3.OperationalError as e:
-            if "duplicate column name" in str(e):
-                print(f"Column {column} already exists in {table}.")
-            else:
-                print(f"Error migrating {table}.{column}: {e}")
-                
-    conn.commit()
-    conn.close()
-    print("Migration completed.")
-else:
-    print("No existing database found. Fresh start will be handled by app initialization.")
+    with engine.connect() as conn:
+        for table, column, col_type, default in migrations:
+            try:
+                print(f"Adding {column} to {table}...")
+                # Raw SQL remains similar, but now executed via SQLAlchemy engine
+                conn.execute(text(f"ALTER TABLE {table} ADD COLUMN {column} {col_type} DEFAULT {default}"))
+                conn.commit()
+            except Exception as e:
+                # Handle cases where column already exists (Error code or message check)
+                err_msg = str(e).lower()
+                if "duplicate" in err_msg or "already exists" in err_msg:
+                    print(f"Column {column} already exists in {table}.")
+                else:
+                    print(f"Error migrating {table}.{column}: {e}")
+        
+    print("Migration check completed.")
+
+if __name__ == "__main__":
+    run_migrations()
