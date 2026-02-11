@@ -151,9 +151,8 @@ def dashboard():
         st.markdown("---")
         
         # Database Status Indicator
-        from database.db_manager import DB_PATH, DATABASE_URL
+        from database.db_manager import DATABASE_URL
         with st.expander("💾 System Storage", expanded=False):
-            st.caption(f"Location: `{DB_PATH}`")
             if "sqlite" in DATABASE_URL:
                 if os.getenv("STREAMLIT_SERVER_GATHER_USAGE_STATS") or os.getenv("SHIBBOLETH_ENABLED"):
                     st.error("⚠️ DATA IS TEMPORARY!")
