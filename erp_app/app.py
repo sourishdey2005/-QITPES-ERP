@@ -1,3 +1,5 @@
+import streamlit as st
+
 # --- Configuration ---
 # MUST be the first Streamlit command
 st.set_page_config(
