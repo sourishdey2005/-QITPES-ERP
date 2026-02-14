@@ -52,10 +52,27 @@ engine = create_engine(
 # Thread-safe session factory
 SessionLocal = scoped_session(sessionmaker(autocommit=False, autoflush=False, bind=engine))
 
+def test_connection():
+    """Verify if the database is reachable"""
+    try:
+        with engine.connect() as conn:
+            return True
+    except Exception as e:
+        print(f"Connection test failed: {e}")
+        return False
+
 def init_db():
-    """Create tables if they don't exist"""
-    Base.metadata.create_all(bind=engine)
-    print(f"Database initialized successfully at: {DB_PATH}")
+    """Create tables if they don't exist with robust error handling"""
+    try:
+        # Check connection before attempting DDL
+        Base.metadata.create_all(bind=engine)
+        print(f"✅ Database initialized successfully at: {DB_PATH}")
+    except Exception as e:
+        print(f"🚨 CRITICAL DATABASE ERROR: {e}")
+        # On Cloud, we might want to fallback to SQLite if Postgres fails
+        # but for ERP, we prefer providing the clear error message.
+        st.error(f"Database Connection Failed: {e}")
+        st.info("💡 TIP: If using Supabase on Streamlit Cloud, ensure you use port 6543 (Pooler) and not 5432.")
 
 def get_db():
     """Dependency for DB session"""

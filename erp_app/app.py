@@ -153,16 +153,21 @@ def dashboard():
         st.markdown("---")
         
         # Database Status Indicator
-        from database.db_manager import DATABASE_URL
-        with st.expander("💾 System Storage", expanded=False):
-            if "sqlite" in DATABASE_URL:
-                if os.getenv("STREAMLIT_SERVER_GATHER_USAGE_STATS") or os.getenv("SHIBBOLETH_ENABLED"):
-                    st.error("⚠️ DATA IS TEMPORARY!")
-                    st.info("Cloud sleep will reset DB. Connect to Postgres for permanence.")
+        from database.db_manager import DATABASE_URL, test_connection
+        with st.expander("💾 System Connectivity", expanded=False):
+            is_alive = test_connection()
+            if is_alive:
+                if "sqlite" in DATABASE_URL:
+                    if os.getenv("STREAMLIT_SERVER_GATHER_USAGE_STATS") or os.getenv("SHIBBOLETH_ENABLED"):
+                        st.error("⚠️ EPHEMERAL STORAGE")
+                        st.info("Cloud reset will wipe data. Connect Postgres.")
+                    else:
+                        st.success("✅ Local SQLite Active")
                 else:
-                    st.success("✅ Persistent Local Storage")
+                    st.success("✅ Remote Postgres Connected")
             else:
-                st.success("✅ External Database Connected")
+                st.error("🚨 DATABASE OFFLINE")
+                st.warning("Systems may be restricted.")
 
         if st.button("Logout"):
             log_event("Logout", "User logged out")
